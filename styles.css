@@ -120,6 +120,14 @@ body:not(.instructor-mode) #personSelect {
   display: none;
 }
 
+body.student-mode #instructorModeButton {
+  display: none;
+}
+
+body.student-mode .sync-card {
+  display: none;
+}
+
 .secondary {
   color: var(--green);
 }

@@ -36,6 +36,7 @@ const storageKey = "satir-five-freedoms-responses-v1";
 const gasEndpointKey = "satir-five-freedoms-gas-endpoint-v1";
 const instructorPasscodeKey = "satir-five-freedoms-instructor-passcode-v1";
 const instructorSessionKey = "satir-five-freedoms-instructor-session-v1";
+const studentModeKey = "satir-five-freedoms-student-mode-v1";
 const currentResponseKey = "satir-five-freedoms-current-response-v1";
 const form = document.querySelector("#surveyForm");
 const groupsRoot = document.querySelector("#questionGroups");
@@ -53,6 +54,7 @@ const instructorModeButton = document.querySelector("#instructorModeButton");
 
 let responses = loadResponses();
 let isInstructorMode = sessionStorage.getItem(instructorSessionKey) === "true";
+let isStudentMode = sessionStorage.getItem(studentModeKey) === "true";
 
 function init() {
   renderForm();
@@ -137,6 +139,8 @@ function handleSubmit(event) {
 
 function initInstructorMode() {
   instructorModeButton.addEventListener("click", async () => {
+    if (isStudentMode) return;
+
     if (isInstructorMode) {
       isInstructorMode = false;
       sessionStorage.removeItem(instructorSessionKey);
@@ -184,7 +188,13 @@ async function hashText(text) {
 }
 
 function applyAccessMode() {
+  if (isStudentMode) {
+    isInstructorMode = false;
+    sessionStorage.removeItem(instructorSessionKey);
+  }
+
   document.body.classList.toggle("instructor-mode", isInstructorMode);
+  document.body.classList.toggle("student-mode", isStudentMode);
   instructorModeButton.textContent = isInstructorMode ? "離開講師模式" : "講師模式";
   personSelect.disabled = !isInstructorMode;
 
@@ -229,8 +239,24 @@ function initSheetSync() {
 function captureEndpointFromUrl() {
   const url = new URL(window.location.href);
   const encodedEndpoint = url.searchParams.get("gas64");
+  const studentMode = url.searchParams.get("mode") === "student";
   const endpoint = encodedEndpoint ? decodeEndpoint(encodedEndpoint) : url.searchParams.get("gas") || url.searchParams.get("endpoint");
-  if (!endpoint) return;
+
+  if (studentMode) {
+    isStudentMode = true;
+    isInstructorMode = false;
+    sessionStorage.setItem(studentModeKey, "true");
+    sessionStorage.removeItem(instructorSessionKey);
+  }
+
+  if (!endpoint) {
+    if (studentMode) {
+      url.searchParams.delete("mode");
+      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+      applyAccessMode();
+    }
+    return;
+  }
 
   if (endpoint.startsWith("https://script.google.com/")) {
     localStorage.setItem(gasEndpointKey, endpoint);
@@ -242,7 +268,9 @@ function captureEndpointFromUrl() {
   url.searchParams.delete("gas64");
   url.searchParams.delete("gas");
   url.searchParams.delete("endpoint");
+  url.searchParams.delete("mode");
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+  applyAccessMode();
 }
 
 function copyStudentLink() {
@@ -256,6 +284,7 @@ function copyStudentLink() {
   url.searchParams.delete("gas");
   url.searchParams.delete("endpoint");
   url.searchParams.set("gas64", encodeEndpoint(endpoint));
+  url.searchParams.set("mode", "student");
   const studentLink = url.toString();
 
   if (navigator.clipboard) {
