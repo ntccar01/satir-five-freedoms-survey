@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Satir 五種自由</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="audience">遇見線上夥伴</p>
+      <h1>Satir 五種自由</h1>
+    </div>
+    <nav class="tabs" aria-label="結果檢視">
+      <button class="tab active" data-view="form">填答</button>
+      <button class="tab" data-view="personal">個人結果</button>
+      <button class="tab" data-view="average">團體平均</button>
+      <button class="tab" data-view="all">全部個人</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="formView" class="view active">
+      <div class="intro">
+        <div>
+          <h2>五種自由覺察問卷</h2>
+          <p>請依照你現今的狀態，分別評估每一項自由的重視程度、使用頻率與熟悉程度。</p>
+        </div>
+        <div class="scale-note">
+          <span>0</span>
+          <strong>低</strong>
+          <span>10</span>
+          <strong>高</strong>
+        </div>
+      </div>
+
+      <form id="surveyForm" class="survey">
+        <label class="name-field">
+          <span>填答者名稱</span>
+          <input id="respondentName" type="text" placeholder="例如：王小明" autocomplete="name" required>
+        </label>
+
+        <section class="sync-card">
+          <div>
+            <h3>Google Sheet 紀錄設定</h3>
+            <p>貼上 Apps Script 部署後的 Web App URL，之後送出問卷會同步寫入 Google Sheet。</p>
+          </div>
+          <label>
+            <span>Web App URL</span>
+            <input id="gasEndpoint" type="url" placeholder="已設定後此欄會自動清空">
+          </label>
+          <div class="sync-actions">
+            <button type="button" id="saveEndpointButton" class="secondary">儲存連結</button>
+            <button type="button" id="syncAllButton" class="secondary">同步本機資料</button>
+            <button type="button" id="archiveCourseButton" class="danger">備份並開始新課程</button>
+          </div>
+          <p id="syncStatus" class="sync-status">尚未設定 Google Sheet 同步。</p>
+        </section>
+
+        <div id="questionGroups" class="question-groups"></div>
+
+        <div class="form-actions">
+          <button type="button" id="demoButton" class="secondary">加入示範資料</button>
+          <button type="submit" class="primary">送出並查看結果</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="personalView" class="view">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">個人結果</p>
+          <h2>三種狀態的雷達圖</h2>
+        </div>
+        <select id="personSelect" aria-label="選擇填答者"></select>
+      </div>
+      <div class="result-layout">
+        <article class="chart-panel large">
+          <canvas id="personalChart" width="560" height="560"></canvas>
+        </article>
+        <article class="score-panel">
+          <h3>分數明細</h3>
+          <div id="personalScores"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="averageView" class="view">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">團體平均</p>
+          <h2>所有填答者的平均樣貌</h2>
+        </div>
+        <p id="averageCount" class="count-text"></p>
+      </div>
+      <div class="result-layout">
+        <article class="chart-panel large">
+          <canvas id="averageChart" width="560" height="560"></canvas>
+        </article>
+        <article class="score-panel">
+          <h3>平均分數</h3>
+          <div id="averageScores"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="allView" class="view">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">全部個人</p>
+          <h2>每位夥伴一列，三種狀態分開呈現</h2>
+        </div>
+        <button id="clearButton" class="danger">清除本機資料</button>
+      </div>
+      <div id="allPeople" class="people-grid"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
