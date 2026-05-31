@@ -15,8 +15,9 @@
     <nav class="tabs" aria-label="結果檢視">
       <button class="tab active" data-view="form">填答</button>
       <button class="tab" data-view="personal">個人結果</button>
-      <button class="tab" data-view="average">團體平均</button>
-      <button class="tab" data-view="all">全部個人</button>
+      <button class="tab instructor-only" data-view="average">團體平均</button>
+      <button class="tab instructor-only" data-view="all">全部個人</button>
+      <button class="tab" id="instructorModeButton" type="button">講師模式</button>
     </nav>
   </header>
 
@@ -41,7 +42,7 @@
           <input id="respondentName" type="text" placeholder="例如：王小明" autocomplete="name" required>
         </label>
 
-        <section class="sync-card">
+        <section class="sync-card instructor-only">
           <div>
             <h3>Google Sheet 紀錄設定</h3>
             <p>貼上 Apps Script 部署後的 Web App URL，之後送出問卷會同步寫入 Google Sheet。</p>
@@ -61,7 +62,7 @@
         <div id="questionGroups" class="question-groups"></div>
 
         <div class="form-actions">
-          <button type="button" id="demoButton" class="secondary">加入示範資料</button>
+          <button type="button" id="demoButton" class="secondary instructor-only">加入示範資料</button>
           <button type="submit" class="primary">送出並查看結果</button>
         </div>
       </form>

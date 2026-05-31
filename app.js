@@ -34,6 +34,9 @@ const dimensions = [
 
 const storageKey = "satir-five-freedoms-responses-v1";
 const gasEndpointKey = "satir-five-freedoms-gas-endpoint-v1";
+const instructorPasscodeKey = "satir-five-freedoms-instructor-passcode-v1";
+const instructorSessionKey = "satir-five-freedoms-instructor-session-v1";
+const currentResponseKey = "satir-five-freedoms-current-response-v1";
 const form = document.querySelector("#surveyForm");
 const groupsRoot = document.querySelector("#questionGroups");
 const personSelect = document.querySelector("#personSelect");
@@ -44,13 +47,17 @@ const saveEndpointButton = document.querySelector("#saveEndpointButton");
 const syncAllButton = document.querySelector("#syncAllButton");
 const archiveCourseButton = document.querySelector("#archiveCourseButton");
 const syncStatus = document.querySelector("#syncStatus");
+const instructorModeButton = document.querySelector("#instructorModeButton");
 
 let responses = loadResponses();
+let isInstructorMode = sessionStorage.getItem(instructorSessionKey) === "true";
 
 function init() {
   renderForm();
   initSheetSync();
+  initInstructorMode();
   wireTabs();
+  applyAccessMode();
   updateViews();
   form.addEventListener("submit", handleSubmit);
   demoButton.addEventListener("click", addDemoData);
@@ -113,10 +120,69 @@ function handleSubmit(event) {
   }
 
   saveResponses();
+  sessionStorage.setItem(currentResponseKey, nextResponse.id);
   syncResponseToSheet(nextResponse);
   form.reset();
   updateViews(name);
   showView("personal");
+}
+
+function initInstructorMode() {
+  instructorModeButton.addEventListener("click", async () => {
+    if (isInstructorMode) {
+      isInstructorMode = false;
+      sessionStorage.removeItem(instructorSessionKey);
+      applyAccessMode();
+      showView("form");
+      return;
+    }
+
+    const storedPasscode = localStorage.getItem(instructorPasscodeKey);
+    if (!storedPasscode) {
+      const firstPasscode = prompt("請設定講師模式密碼。這組密碼只會存在這台瀏覽器。");
+      if (!firstPasscode) return;
+      const secondPasscode = prompt("請再輸入一次講師模式密碼。");
+      if (firstPasscode !== secondPasscode) {
+        alert("兩次密碼不一致，尚未設定。");
+        return;
+      }
+
+      localStorage.setItem(instructorPasscodeKey, await hashText(firstPasscode));
+      isInstructorMode = true;
+      sessionStorage.setItem(instructorSessionKey, "true");
+      applyAccessMode();
+      alert("講師模式已設定並啟用。");
+      return;
+    }
+
+    const passcode = prompt("請輸入講師模式密碼。");
+    if (!passcode) return;
+
+    if (await hashText(passcode) !== storedPasscode) {
+      alert("密碼不正確。");
+      return;
+    }
+
+    isInstructorMode = true;
+    sessionStorage.setItem(instructorSessionKey, "true");
+    applyAccessMode();
+  });
+}
+
+async function hashText(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function applyAccessMode() {
+  document.body.classList.toggle("instructor-mode", isInstructorMode);
+  instructorModeButton.textContent = isInstructorMode ? "離開講師模式" : "講師模式";
+  personSelect.disabled = !isInstructorMode;
+
+  if (!isInstructorMode && (document.querySelector("#averageView").classList.contains("active") || document.querySelector("#allView").classList.contains("active"))) {
+    showView("personal");
+  }
 }
 
 function initSheetSync() {
@@ -204,6 +270,7 @@ function archiveCurrentCourse() {
     .then(() => {
       responses = [];
       saveResponses();
+      sessionStorage.removeItem(currentResponseKey);
       updateViews();
       setSyncStatus("已送出備份與重置要求；本機資料已清空，可開始新課程。", "ok");
     })
@@ -221,13 +288,17 @@ function setSyncStatus(message, tone = "") {
 }
 
 function wireTabs() {
-  document.querySelectorAll(".tab").forEach((button) => {
+  document.querySelectorAll(".tab[data-view]").forEach((button) => {
     button.addEventListener("click", () => showView(button.dataset.view));
   });
 }
 
 function showView(view) {
-  document.querySelectorAll(".tab").forEach((button) => {
+  if (!isInstructorMode && (view === "average" || view === "all")) {
+    view = "personal";
+  }
+
+  document.querySelectorAll(".tab[data-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === view);
   });
   document.querySelectorAll(".view").forEach((section) => section.classList.remove("active"));
@@ -243,17 +314,23 @@ function updateViews(preferredName) {
 }
 
 function refreshPersonSelect(preferredName) {
-  const current = preferredName || personSelect.value || responses.at(-1)?.name || "";
+  const currentResponseId = sessionStorage.getItem(currentResponseKey);
+  const current = preferredName || personSelect.value || responses.find((response) => response.id === currentResponseId)?.name || responses.at(-1)?.name || "";
   personSelect.innerHTML = responses.map((response) => `
     <option value="${response.id}">${response.name}</option>
   `).join("");
 
-  const selected = responses.find((response) => response.name === current) || responses.at(-1);
+  const selected = !isInstructorMode && currentResponseId
+    ? responses.find((response) => response.id === currentResponseId)
+    : responses.find((response) => response.name === current) || responses.at(-1);
   if (selected) personSelect.value = selected.id;
 }
 
 function updatePersonalView() {
-  const response = responses.find((item) => item.id === personSelect.value) || responses.at(-1);
+  const currentResponseId = sessionStorage.getItem(currentResponseKey);
+  const response = !isInstructorMode
+    ? currentResponseId ? responses.find((item) => item.id === currentResponseId) : null
+    : responses.find((item) => item.id === personSelect.value) || responses.at(-1);
   const chart = document.querySelector("#personalChart");
   const scores = document.querySelector("#personalScores");
 
@@ -614,6 +691,7 @@ function addDemoData() {
 function clearData() {
   if (!confirm("確定要清除目前儲存在這台電腦的填答資料嗎？")) return;
   responses = [];
+  sessionStorage.removeItem(currentResponseKey);
   saveResponses();
   updateViews();
 }

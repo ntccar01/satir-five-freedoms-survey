@@ -104,6 +104,22 @@ input {
   background: var(--green);
 }
 
+.instructor-only {
+  display: none;
+}
+
+body.instructor-mode .instructor-only {
+  display: initial;
+}
+
+body.instructor-mode .sync-card.instructor-only {
+  display: grid;
+}
+
+body:not(.instructor-mode) #personSelect {
+  display: none;
+}
+
 .secondary {
   color: var(--green);
 }
