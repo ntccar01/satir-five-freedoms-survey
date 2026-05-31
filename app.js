@@ -48,6 +48,7 @@ const copyStudentLinkButton = document.querySelector("#copyStudentLinkButton");
 const syncAllButton = document.querySelector("#syncAllButton");
 const archiveCourseButton = document.querySelector("#archiveCourseButton");
 const syncStatus = document.querySelector("#syncStatus");
+const studentSyncStatus = document.querySelector("#studentSyncStatus");
 const instructorModeButton = document.querySelector("#instructorModeButton");
 
 let responses = loadResponses();
@@ -101,6 +102,12 @@ function renderQuestion(axis, dimension, index) {
 
 function handleSubmit(event) {
   event.preventDefault();
+  if (!loadGasEndpoint()) {
+    setStudentSyncStatus("尚未連接課程記錄，請重新掃描講師提供的 QR Code。", "warn");
+    alert("尚未連接課程記錄，資料不會進入講師後台。請重新掃描講師提供的 QR Code。");
+    return;
+  }
+
   const formData = new FormData(form);
   const name = document.querySelector("#respondentName").value.trim();
   const scores = {};
@@ -221,13 +228,18 @@ function initSheetSync() {
 
 function captureEndpointFromUrl() {
   const url = new URL(window.location.href);
-  const endpoint = url.searchParams.get("gas") || url.searchParams.get("endpoint");
+  const encodedEndpoint = url.searchParams.get("gas64");
+  const endpoint = encodedEndpoint ? decodeEndpoint(encodedEndpoint) : url.searchParams.get("gas") || url.searchParams.get("endpoint");
   if (!endpoint) return;
 
   if (endpoint.startsWith("https://script.google.com/")) {
     localStorage.setItem(gasEndpointKey, endpoint);
+    setStudentSyncStatus("已連接課程記錄，送出後會寫入講師後台。", "ok");
+  } else {
+    setStudentSyncStatus("學員連結中的課程記錄設定無效，請重新掃描講師提供的 QR Code。", "warn");
   }
 
+  url.searchParams.delete("gas64");
   url.searchParams.delete("gas");
   url.searchParams.delete("endpoint");
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
@@ -241,7 +253,9 @@ function copyStudentLink() {
   }
 
   const url = new URL(window.location.href);
-  url.searchParams.set("gas", endpoint);
+  url.searchParams.delete("gas");
+  url.searchParams.delete("endpoint");
+  url.searchParams.set("gas64", encodeEndpoint(endpoint));
   const studentLink = url.toString();
 
   if (navigator.clipboard) {
@@ -252,6 +266,18 @@ function copyStudentLink() {
   }
 
   setSyncStatus(`請手動複製學員連結：${studentLink}`, "warn");
+}
+
+function encodeEndpoint(endpoint) {
+  return btoa(endpoint);
+}
+
+function decodeEndpoint(value) {
+  try {
+    return atob(value);
+  } catch {
+    return "";
+  }
 }
 
 function syncResponseToSheet(response, showSkipped = true) {
@@ -324,6 +350,23 @@ function setSyncStatus(message, tone = "") {
   syncStatus.textContent = message;
   syncStatus.classList.toggle("ok", tone === "ok");
   syncStatus.classList.toggle("warn", tone === "warn");
+  updateStudentSyncStatus();
+}
+
+function updateStudentSyncStatus() {
+  if (!studentSyncStatus) return;
+  const connected = Boolean(loadGasEndpoint());
+  setStudentSyncStatus(
+    connected ? "已連接課程記錄，送出後會寫入講師後台。" : "尚未連接課程記錄，請使用講師提供的 QR Code。",
+    connected ? "ok" : "warn"
+  );
+}
+
+function setStudentSyncStatus(message, tone = "") {
+  if (!studentSyncStatus) return;
+  studentSyncStatus.textContent = message;
+  studentSyncStatus.classList.toggle("ok", tone === "ok");
+  studentSyncStatus.classList.toggle("warn", tone === "warn");
 }
 
 function wireTabs() {

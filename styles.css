@@ -247,6 +247,28 @@ select {
   color: #9d2f2a;
 }
 
+.student-sync-status {
+  margin: -4px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: #fbf7ec;
+  font-weight: 700;
+}
+
+.student-sync-status.ok {
+  border-color: rgba(71, 123, 90, 0.35);
+  color: var(--green);
+  background: rgba(71, 123, 90, 0.08);
+}
+
+.student-sync-status.warn {
+  border-color: rgba(157, 47, 42, 0.35);
+  color: #9d2f2a;
+  background: rgba(157, 47, 42, 0.08);
+}
+
 .group-head {
   display: flex;
   align-items: center;
