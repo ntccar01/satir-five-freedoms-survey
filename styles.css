@@ -238,6 +238,10 @@ select {
   gap: 16px;
 }
 
+.group-head h3 {
+  color: var(--accent);
+}
+
 .group-head p {
   margin-bottom: 0;
   color: var(--muted);
