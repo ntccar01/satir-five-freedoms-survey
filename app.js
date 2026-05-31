@@ -46,6 +46,7 @@ const clearButton = document.querySelector("#clearButton");
 const gasEndpointInput = document.querySelector("#gasEndpoint");
 const saveEndpointButton = document.querySelector("#saveEndpointButton");
 const copyStudentLinkButton = document.querySelector("#copyStudentLinkButton");
+const loadSheetButton = document.querySelector("#loadSheetButton");
 const syncAllButton = document.querySelector("#syncAllButton");
 const archiveCourseButton = document.querySelector("#archiveCourseButton");
 const syncStatus = document.querySelector("#syncStatus");
@@ -163,6 +164,7 @@ function initInstructorMode() {
       isInstructorMode = true;
       sessionStorage.setItem(instructorSessionKey, "true");
       applyAccessMode();
+      loadResponsesFromSheet(false);
       alert("講師模式已設定並啟用。");
       return;
     }
@@ -178,6 +180,7 @@ function initInstructorMode() {
     isInstructorMode = true;
     sessionStorage.setItem(instructorSessionKey, "true");
     applyAccessMode();
+    loadResponsesFromSheet(false);
   });
 }
 
@@ -222,6 +225,7 @@ function initSheetSync() {
   });
 
   copyStudentLinkButton.addEventListener("click", copyStudentLink);
+  loadSheetButton.addEventListener("click", () => loadResponsesFromSheet(true));
 
   syncAllButton.addEventListener("click", () => {
     if (!responses.length) {
@@ -247,6 +251,8 @@ function captureEndpointFromUrl() {
     isStudentMode = false;
     sessionStorage.removeItem(studentModeKey);
     url.searchParams.delete("admin");
+    url.searchParams.delete("student");
+    url.searchParams.delete("mode");
     window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
     return;
   }
@@ -348,6 +354,59 @@ function syncResponseToSheet(response, showSkipped = true) {
     .catch(() => setSyncStatus("Google Sheet 同步失敗，資料仍已保存在本機。", "warn"));
 }
 
+function loadResponsesFromSheet(showStatus = true) {
+  const endpoint = loadGasEndpoint();
+  if (!endpoint) {
+    if (showStatus) setSyncStatus("請先設定 Google Sheet Web App URL，才能載入後台資料。", "warn");
+    return Promise.resolve();
+  }
+
+  if (showStatus) setSyncStatus("正在載入 Google Sheet 後台資料...", "");
+
+  return jsonpRequest(endpoint, { action: "list" })
+    .then((result) => {
+      if (!result || !result.ok) {
+        setSyncStatus("載入後台資料失敗，請確認 Apps Script 已更新並重新部署。", "warn");
+        return;
+      }
+
+      responses = result.responses || [];
+      saveResponses();
+      updateViews();
+      setSyncStatus(`已載入 ${responses.length} 筆後台資料。`, "ok");
+    })
+    .catch(() => setSyncStatus("載入後台資料失敗，請確認 Apps Script 部署權限與網路狀態。", "warn"));
+}
+
+function jsonpRequest(endpoint, params = {}) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `satirSheetCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const url = new URL(endpoint);
+    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+    url.searchParams.set("callback", callbackName);
+    url.searchParams.set("_", Date.now().toString());
+
+    const script = document.createElement("script");
+    const cleanup = () => {
+      delete window[callbackName];
+      script.remove();
+    };
+
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("JSONP request failed"));
+    };
+
+    script.src = url.toString();
+    document.body.appendChild(script);
+  });
+}
+
 function archiveCurrentCourse() {
   const endpoint = loadGasEndpoint();
   if (!endpoint) {
@@ -427,6 +486,10 @@ function showView(view) {
   document.querySelectorAll(".view").forEach((section) => section.classList.remove("active"));
   document.querySelector(`#${view}View`).classList.add("active");
   updateViews();
+
+  if (isInstructorMode && (view === "average" || view === "all")) {
+    loadResponsesFromSheet(false);
+  }
 }
 
 function updateViews(preferredName) {
