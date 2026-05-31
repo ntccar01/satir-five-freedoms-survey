@@ -238,9 +238,18 @@ function initSheetSync() {
 
 function captureEndpointFromUrl() {
   const url = new URL(window.location.href);
+  const adminMode = url.searchParams.get("admin") === "1";
   const encodedEndpoint = url.searchParams.get("gas64");
-  const studentMode = url.searchParams.get("mode") === "student";
+  const studentMode = url.searchParams.get("mode") === "student" || url.searchParams.get("student") === "1";
   const endpoint = encodedEndpoint ? decodeEndpoint(encodedEndpoint) : url.searchParams.get("gas") || url.searchParams.get("endpoint");
+
+  if (adminMode) {
+    isStudentMode = false;
+    sessionStorage.removeItem(studentModeKey);
+    url.searchParams.delete("admin");
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+    return;
+  }
 
   if (studentMode) {
     isStudentMode = true;
@@ -252,6 +261,7 @@ function captureEndpointFromUrl() {
   if (!endpoint) {
     if (studentMode) {
       url.searchParams.delete("mode");
+      url.searchParams.set("student", "1");
       window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
       applyAccessMode();
     }
@@ -269,6 +279,7 @@ function captureEndpointFromUrl() {
   url.searchParams.delete("gas");
   url.searchParams.delete("endpoint");
   url.searchParams.delete("mode");
+  url.searchParams.set("student", "1");
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
   applyAccessMode();
 }
@@ -283,8 +294,9 @@ function copyStudentLink() {
   const url = new URL(window.location.href);
   url.searchParams.delete("gas");
   url.searchParams.delete("endpoint");
+  url.searchParams.delete("admin");
   url.searchParams.set("gas64", encodeEndpoint(endpoint));
-  url.searchParams.set("mode", "student");
+  url.searchParams.set("student", "1");
   const studentLink = url.toString();
 
   if (navigator.clipboard) {
