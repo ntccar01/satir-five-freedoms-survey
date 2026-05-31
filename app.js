@@ -44,6 +44,7 @@ const demoButton = document.querySelector("#demoButton");
 const clearButton = document.querySelector("#clearButton");
 const gasEndpointInput = document.querySelector("#gasEndpoint");
 const saveEndpointButton = document.querySelector("#saveEndpointButton");
+const copyStudentLinkButton = document.querySelector("#copyStudentLinkButton");
 const syncAllButton = document.querySelector("#syncAllButton");
 const archiveCourseButton = document.querySelector("#archiveCourseButton");
 const syncStatus = document.querySelector("#syncStatus");
@@ -186,6 +187,7 @@ function applyAccessMode() {
 }
 
 function initSheetSync() {
+  captureEndpointFromUrl();
   const endpoint = loadGasEndpoint();
   gasEndpointInput.value = "";
   setSyncStatus(endpoint ? "已設定 Google Sheet 同步連結。" : "尚未設定 Google Sheet 同步。", endpoint ? "ok" : "");
@@ -202,6 +204,8 @@ function initSheetSync() {
     setSyncStatus(nextEndpoint ? "已儲存 Google Sheet 同步連結。" : "已清除 Google Sheet 同步連結。", nextEndpoint ? "ok" : "");
   });
 
+  copyStudentLinkButton.addEventListener("click", copyStudentLink);
+
   syncAllButton.addEventListener("click", () => {
     if (!responses.length) {
       setSyncStatus("目前沒有本機資料可以同步。", "warn");
@@ -213,6 +217,41 @@ function initSheetSync() {
   });
 
   archiveCourseButton.addEventListener("click", archiveCurrentCourse);
+}
+
+function captureEndpointFromUrl() {
+  const url = new URL(window.location.href);
+  const endpoint = url.searchParams.get("gas") || url.searchParams.get("endpoint");
+  if (!endpoint) return;
+
+  if (endpoint.startsWith("https://script.google.com/")) {
+    localStorage.setItem(gasEndpointKey, endpoint);
+  }
+
+  url.searchParams.delete("gas");
+  url.searchParams.delete("endpoint");
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+
+function copyStudentLink() {
+  const endpoint = loadGasEndpoint();
+  if (!endpoint) {
+    setSyncStatus("請先儲存 Google Sheet Web App URL，再產生學員連結。", "warn");
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("gas", endpoint);
+  const studentLink = url.toString();
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(studentLink)
+      .then(() => setSyncStatus("已複製學員連結，可用這個網址產生 QR Code。", "ok"))
+      .catch(() => setSyncStatus(`請手動複製學員連結：${studentLink}`, "warn"));
+    return;
+  }
+
+  setSyncStatus(`請手動複製學員連結：${studentLink}`, "warn");
 }
 
 function syncResponseToSheet(response, showSkipped = true) {
