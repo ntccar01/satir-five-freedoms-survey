@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Satir 五種自由專案開發示範</title>
+  <link rel="stylesheet" href="presentation.css">
+</head>
+<body>
+  <header class="deck-bar">
+    <a class="brand" href="index.html">Satir 五種自由</a>
+    <div class="deck-progress" aria-hidden="true">
+      <span id="progressFill"></span>
+    </div>
+    <nav class="deck-actions" aria-label="簡報控制">
+      <button id="prevSlide" type="button">上一頁</button>
+      <span id="slideCount">1 / 15</span>
+      <button id="nextSlide" type="button">下一頁</button>
+    </nav>
+  </header>
+
+  <main class="deck" id="deck">
+    <section class="slide title-slide active">
+      <div class="slide-inner">
+        <p class="kicker">AI 協作開發示範</p>
+        <h1>從一句想法到可上線的問卷網站</h1>
+        <p class="lead">以「Satir 五種自由」雷達圖問卷為例，示範如何透過連續提問，把概念、資料、視覺、權限、後台與上線流程逐步完成。</p>
+        <div class="hero-links">
+          <a href="index.html">開啟問卷</a>
+          <a href="https://github.com/ntccar01/satir-five-freedoms-survey">GitHub Repo</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">成果概覽</p>
+        <h2>最後完成了什麼？</h2>
+        <div class="feature-grid">
+          <article><strong>學生填答</strong><span>0 到 10 量表，三種狀態分段填答。</span></article>
+          <article><strong>個人雷達圖</strong><span>紅、藍、黃三條線呈現重視、使用、熟悉。</span></article>
+          <article><strong>講師模式</strong><span>團體平均、全部個人與後台設定只給講師使用。</span></article>
+          <article><strong>Google Sheet</strong><span>學生掃 QR Code 後，資料自動寫入講師後台。</span></article>
+          <article><strong>課程重置</strong><span>舊資料備份成新工作表，再清空主表開始新班級。</span></article>
+          <article><strong>GitHub Pages</strong><span>公開網址可直接開啟，不需安裝。</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">開發路線</p>
+        <h2>一個專案可以這樣問出來</h2>
+        <ol class="timeline">
+          <li><b>先描述想法</b><span>像問卷網站，答案轉成雷達圖。</span></li>
+          <li><b>調整量表</b><span>從 1-10 改成 0-10。</span></li>
+          <li><b>釐清資料結構</b><span>同五題、三次回答、三種意義。</span></li>
+          <li><b>補視覺規則</b><span>重視紅、使用藍、熟悉黃。</span></li>
+          <li><b>做第一版</b><span>看畫面後逐步修正文字、尺寸、排版。</span></li>
+          <li><b>接後台與上線</b><span>GAS、Google Sheet、GitHub Pages、QR Code。</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">你的提問示範</p>
+        <h2>需求不是一次說完，而是逐步變清楚</h2>
+        <div class="quote-list">
+          <blockquote>我想設計一個類似問卷的網站，題目歸類為五大項，回答後轉成雷達圖。</blockquote>
+          <blockquote>先將每一題由 1~10 調整成由 0~10。</blockquote>
+          <blockquote>如果同時有 20 人回應，雷達可以同時顯示這 20 人的回應嗎？</blockquote>
+          <blockquote>我的題組共 5 題，題目都一樣，第一次看重視程度，第二次看應用程度，第三次看熟悉程度。</blockquote>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">題目與資料</p>
+        <h2>把文字題目轉成可運算資料</h2>
+        <table class="content-table">
+          <thead><tr><th>軸向</th><th>中文題目</th><th>英文提示</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>自由地看和聽</td><td>see and hear what is here</td></tr>
+            <tr><td>2</td><td>自由地說出所感所想</td><td>say what one feels and thinks</td></tr>
+            <tr><td>3</td><td>自由地感覺</td><td>feel</td></tr>
+            <tr><td>4</td><td>自由地要求你所想要的</td><td>ask for what one wants</td></tr>
+            <tr><td>5</td><td>自由地根據自己想法去冒險</td><td>take risks in one's own behalf</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">視覺決策</p>
+        <h2>讓圖表規則先固定，使用者才看得懂</h2>
+        <div class="color-row">
+          <div class="color-card red"><b>重視程度</b><span>紅色</span></div>
+          <div class="color-card blue"><b>使用頻率</b><span>藍色</span></div>
+          <div class="color-card yellow"><b>熟悉程度</b><span>黃色</span></div>
+        </div>
+        <ul class="clean-list">
+          <li>完全重疊時，後兩條線改成虛線，避免其中一條被蓋住。</li>
+          <li>個人頁保留三線總覽；全部個人頁採姓名 + 2x2 小雷達圖。</li>
+          <li>14 吋筆電螢幕優先，調整圖卡尺寸與文字距離。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">迭代修正</p>
+        <h2>看畫面後，請 AI 修「具體問題」</h2>
+        <div class="two-column">
+          <div>
+            <h3>你指出的問題</h3>
+            <ul class="clean-list">
+              <li>文字不見或重疊。</li>
+              <li>表格欄位擠在一起。</li>
+              <li>雷達圖太小或文字離圖太近。</li>
+              <li>全部個人一排太寬，改成 2x2。</li>
+            </ul>
+          </div>
+          <div>
+            <h3>好的提問方式</h3>
+            <p class="prompt-card">「如圖片所示，某些文字重疊，請讓圖稍微大一點，但仍保持在區塊內，並把文字與圖的距離拉開。」</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">資料後台</p>
+        <h2>Google Sheet 不是只寫入，還要能讀回</h2>
+        <div class="flow">
+          <span>學生掃 QR</span>
+          <span>自動帶入 GAS URL</span>
+          <span>填答送出</span>
+          <span>寫入 Google Sheet</span>
+          <span>講師載入後台資料</span>
+        </div>
+        <p class="note">這一步後來修正過：一開始只有寫入 Sheet，講師前台仍看不到後台資料；後來加上 GAS 的讀取入口，講師模式才會把 Sheet 資料載回來。</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">權限設計</p>
+        <h2>學生入口與講師入口分開</h2>
+        <div class="two-column">
+          <article class="role-card">
+            <h3>學員端</h3>
+            <p>只看填答與個人結果。學員連結會保留 `student=1`，並自動隱藏講師模式與後台設定。</p>
+          </article>
+          <article class="role-card">
+            <h3>講師端</h3>
+            <p>用一般網址或 `?admin=1` 進入。輸入講師密碼後，可以看團體平均、全部個人與後台工具。</p>
+          </article>
+        </div>
+        <p class="note">提醒同事：GitHub Pages 是靜態網站，這是課堂使用的前端保護；若要嚴格資安，需要後端登入。</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">上線流程</p>
+        <h2>從本機到公開網址</h2>
+        <ol class="timeline compact">
+          <li><b>建立檔案</b><span>HTML、CSS、JavaScript、GAS 程式碼。</span></li>
+          <li><b>Git 版本記錄</b><span>初始化、提交、推送。</span></li>
+          <li><b>GitHub Repository</b><span>建立 `satir-five-freedoms-survey`。</span></li>
+          <li><b>GitHub Pages</b><span>啟用 main branch 根目錄。</span></li>
+          <li><b>Google Drive 備份</b><span>複製到 `GPTcodex資料夾/Satir`。</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">同事可照問</p>
+        <h2>提示模板 1：把想法變成第一版</h2>
+        <pre class="prompt-block">我想做一個簡單網站，功能是：
+1. 使用者可以填答問卷
+2. 每題使用 0 到 10 分
+3. 結果要用雷達圖呈現
+4. 請先幫我整理架構，再做第一版原型
+
+我的題目是：
+（貼上題目）
+
+請用可以直接打開的網頁方式製作。</pre>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">同事可照問</p>
+        <h2>提示模板 2：根據截圖修畫面</h2>
+        <pre class="prompt-block">如圖片所示，畫面有幾個問題：
+1. 文字有重疊
+2. 右側表格太窄
+3. 圖表需要稍微放大
+
+請你直接調整程式，並保持原本功能不變。
+調整後請確認手機和筆電畫面都能閱讀。</pre>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">同事可照問</p>
+        <h2>提示模板 3：接 Google Sheet</h2>
+        <pre class="prompt-block">我想把這個網頁的填答結果寫入 Google Sheet。
+請幫我：
+1. 設計 Google Apps Script 程式碼
+2. 告訴我如何部署 Web App
+3. 修改網頁，讓填答後自動寫入 Sheet
+4. 讓講師端可以讀回 Sheet 資料並呈現圖表</pre>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-inner">
+        <p class="kicker">協作心法</p>
+        <h2>提問越像「教練回饋」，AI 越能完成專案</h2>
+        <div class="feature-grid">
+          <article><strong>先說目的</strong><span>這是給誰用？在什麼場景用？</span></article>
+          <article><strong>再給資料</strong><span>題目、欄位、分類、顏色、角色。</span></article>
+          <article><strong>看圖回饋</strong><span>指出哪裡太擠、看不到、順序不對。</span></article>
+          <article><strong>逐步加功能</strong><span>先原型，再資料，再權限，再上線。</span></article>
+          <article><strong>要求驗證</strong><span>請 AI 檢查語法、推上 GitHub、確認 Pages 狀態。</span></article>
+          <article><strong>保留版本</strong><span>GitHub 與 Google Drive 各保留一份。</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide title-slide">
+      <div class="slide-inner">
+        <p class="kicker">現場示範流程</p>
+        <h2>建議你這樣展示給同事</h2>
+        <ol class="timeline compact">
+          <li><b>先開問卷</b><span>展示學生填答與個人雷達圖。</span></li>
+          <li><b>切講師模式</b><span>展示團體平均與全部個人。</span></li>
+          <li><b>打開 Google Sheet</b><span>證明資料真的進後台。</span></li>
+          <li><b>回到簡報</b><span>說明每個功能是如何透過提問慢慢完成。</span></li>
+          <li><b>給同事模板</b><span>讓他們帶自己的題目試做。</span></li>
+        </ol>
+        <div class="hero-links">
+          <a href="https://ntccar01.github.io/satir-five-freedoms-survey/">問卷網站</a>
+          <a href="presentation.html">本簡報</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="presentation.js"></script>
+</body>
+</html>
